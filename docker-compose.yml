@@ -1,0 +1,26 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # 1. 메인 데이터베이스 (PostgreSQL)
+  postgres:
+    image: postgres:15-alpine
+    container_name: genkun-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # 2. 큐 관리용 (Redis) - 차후 BullMQ 비동기관리
+  redis:
+    image: redis:alpine
+    container_name: genkun-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
