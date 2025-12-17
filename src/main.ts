@@ -5,6 +5,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import * as expressBasicAuth from 'express-basic-auth';
 import * as passport from 'passport';
 import * as cookieParser from 'cookie-parser';
+import { HttpApiExceptionFilter } from './common/exceptions/http-api-exception.filter'
 import {
   ClassSerializerInterceptor,
   Logger,
@@ -41,7 +42,7 @@ class Application {
           [this.ADMIN_USER]: this.ADMIN_PASSWORD,
         },
       }),
-    );
+    )
   }
 
   private setUpOpenAPIMidleware() {
