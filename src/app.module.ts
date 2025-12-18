@@ -5,6 +5,8 @@ import * as Joi from 'joi';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { SttModule } from './stt/stt.module';
+import { SessionModule } from './session/session.module';
 
 const typeOrmAsyncOptions = {
   useFactory: async (
@@ -45,6 +47,8 @@ const typeOrmAsyncOptions = {
       }),
     }),
     TypeOrmModule.forRootAsync(typeOrmAsyncOptions),
+    SttModule,
+    SessionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

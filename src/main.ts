@@ -2,9 +2,9 @@ import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import * as expressBasicAuth from 'express-basic-auth';
-import * as passport from 'passport';
-import * as cookieParser from 'cookie-parser';
+import expressBasicAuth from 'express-basic-auth';
+import passport from 'passport';
+import cookieParser from 'cookie-parser';
 import { HttpApiExceptionFilter } from './common/exceptions/http-api-exception.filter'
 import {
   ClassSerializerInterceptor,
@@ -73,8 +73,8 @@ class Application {
         transform: true,
       }),
     );
-    this.server.use(passport.initialize());
-    this.server.use(passport.session());
+    // this.server.use(passport.initialize());
+    // this.server.use(passport.session());
     this.server.useGlobalInterceptors(
       new ClassSerializerInterceptor(this.server.get(Reflector)),
     );
