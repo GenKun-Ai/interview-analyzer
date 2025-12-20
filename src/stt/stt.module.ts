@@ -7,16 +7,22 @@ import { OpenAIWhisperAdapter } from './adapters/openai-whisper.adapter';
 import { STT_ENGINE } from 'src/common/constans/injection-tokens';
 
 @Module({
-  imports: [ConfigModule],
-  controllers: [SttController],
-  providers: [SttService, OpenAIWhisperAdapter, GoogleSttAdapter, {
-    provide: STT_ENGINE,
-    useFactory: (config: ConfigService, openai: OpenAIWhisperAdapter, google: GoogleSttAdapter) => {
-      const engine = config.get('STT_ENGINE', 'openai');
-      return engine === 'google' ? google : openai;
+  imports: [ConfigModule], // 설정 모듈 임포트
+  controllers: [SttController], // 컨트롤러 등록
+  providers: [
+    SttService,
+    OpenAIWhisperAdapter,
+    GoogleSttAdapter,
+    {
+      provide: STT_ENGINE, // STT_ENGINE 토큰 제공
+      // 팩토리 함수를 사용하여 동적으로 STT 엔진 선택
+      useFactory: (config: ConfigService, openai: OpenAIWhisperAdapter, google: GoogleSttAdapter) => {
+        const engine = config.get('STT_ENGINE', 'openai'); // 환경변수에서 엔진 이름 가져옴
+        return engine === 'google' ? google : openai; // 'google'이면 Google, 아니면 OpenAI 어댑터 사용
+      },
+      inject: [ConfigService, OpenAIWhisperAdapter, GoogleSttAdapter], // 의존성 주입
     },
-    inject: [ConfigService, OpenAIWhisperAdapter, GoogleSttAdapter],
-  }],
-  exports: [SttService, STT_ENGINE],
+  ],
+  exports: [SttService, STT_ENGINE], // 다른 모듈에서 사용할 수 있도록 서비스와 토큰을 export
 })
-export class SttModule {}
+export class SttModule {} // STT 모듈
