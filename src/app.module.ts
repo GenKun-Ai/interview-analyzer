@@ -7,6 +7,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SttModule } from './stt/stt.module';
 import { SessionModule } from './session/session.module';
+import { AnalysisModule } from './analysis/analysis.module';
 
 const typeOrmAsyncOptions = {
   useFactory: async (
@@ -49,6 +50,7 @@ const typeOrmAsyncOptions = {
     TypeOrmModule.forRootAsync(typeOrmAsyncOptions),
     SttModule,
     SessionModule,
+    AnalysisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
