@@ -22,12 +22,13 @@ export class SttService {
    * @param language - 오디오 언어 (예: 'ko', 'ja', 'en')
    * @returns STT 변환 결과 (텍스트, 세그먼트 등)
    */
-  async transcribeAudio(audioBuffer: Buffer, language: string) {
-    console.log(`Using STT Engine ${this.sttEngine}`) // 현재 사용 중인 STT 엔진 로깅함
+  async transcribeAudio(audioBuffer: Buffer, language: string, filename: string) {
+    console.log('Using STT Engine', this.sttEngine) // 현재 사용 중인 STT 엔진 로깅함
 
     // STT 엔진에 오디오와 옵션 전달하여 변환 실행함
     return await this.sttEngine.transcribe(audioBuffer, {
       language, // 언어 설정
+      filename,
       enableSpeakerDiarization: true, // 화자 분리 활성화
       enableWordTimestamps: true, // 단어 타임스탬프 활성화
     })

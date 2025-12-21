@@ -37,6 +37,7 @@ export interface SttEngine {
 
 export interface SttOptions {
     language?: string; // 변환할 오디오 언어 (선택 사항)
+    filename?: string;
     enableSpeakerDiarization?: boolean; // 화자 분리 활성화 여부 (선택 사항)
     enableWordTimestamps?: boolean; // 단어별 타임스탬프 활성화 여부 (선택 사항)
 }

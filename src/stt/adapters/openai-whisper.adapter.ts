@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
-import { Injectable } from "@nestjs/common";
-import OpenAI from "openai";
+import { Injectable, InternalServerErrorException } from "@nestjs/common";
+import OpenAI, { toFile } from "openai";
 import {
   SttEngine,
   SttOptions,
@@ -27,7 +27,7 @@ export class OpenAIWhisperAdapter implements SttEngine {
   }
 
   getSupportedLanguages(): string[] {
-    return ['ko', 'jp'] // 지원 언어 목록 반환함
+    return ['ko', 'ja'] // 지원 언어 목록 반환함 (ja: 일본어 ISO 639-1 코드)
   }
 
   /**
@@ -41,28 +41,43 @@ export class OpenAIWhisperAdapter implements SttEngine {
    */
   async transcribe(
     audioBuffer: Buffer,
-    options?: SttOptions,
+    options?: SttOptions & { filename?: string },
   ): Promise<SttResult> {
-    // OpenAI SDK는 Buffer를 직접 받을 수 있음 (File 객체 필요 없음)
-    // toFile 헬퍼를 사용하여 File-like 객체 생성
-    // Node.js 환경 : Buffer를 File-like 객체로 변환
-    const file = Object.assign(audioBuffer, {
-      name: 'audio.mp3', // 파일 이름 지정함
-      type: 'audio/mpeg', // MIME 타입 지정함
-      lastModified: Date.now(), // 최종 수정 시간 기록함
-    })
 
-    // Whisper API 호출하여 음성 텍스트로 변환함
-    const transcription = await this.client.audio.transcriptions.create({
-      file: file as any, // TypeScript 타입 우회함
-      model: 'whisper-1', // Whisper 모델 사용함
-      language: options?.language, // 요청 언어 설정함
-      response_format: 'verbose_json', // 상세 JSON 응답 요청함
-      timestamp_granularities: ['word', 'segment'], // 단어, 세그먼트 타임스탬프 포함함
-    })
+    try {
+      // 로그 시작 알림
+      console.log(`[OpenAI] 파일 처리 중... (size: ${audioBuffer.length})`)
+      const startTime = Date.now()
 
-    return this.transformToSttResult(transcription) // 결과 변환 후 반환함
+      const originalName = options?.filename || 'audio.mp3'
+
+      // OpenAI SDK는 Buffer를 직접 받을 수 있음 (File 객체 필요 없음)
+      // toFile 헬퍼를 사용하여 File-like 객체 생성
+      // Node.js 환경 : Buffer를 File-like 객체로 변환
+      const file = await toFile(audioBuffer, originalName, {
+        type: 'application/octet-stream', // MIME 타입 지정함
+        lastModified: Date.now(), // 최종 수정 시간 기록함
+      })
+
+      // Whisper API 호출하여 음성 텍스트로 변환함
+      const transcription = await this.client.audio.transcriptions.create({
+        file: file,
+        model: 'whisper-1', // Whisper 모델 사용함
+        language: options?.language, // 요청 언어 설정함
+        response_format: 'verbose_json', // 상세 JSON 응답 요청함
+        timestamp_granularities: ['word', 'segment'], // 단어, 세그먼트 타임스탬프 포함함
+      })
+
+      // 로그 추가
+      const duration = (Date.now() - startTime) / 1000
+      console.log(`[OpenAI] 변환 완료! took ${duration}`)
+
+      return this.transformToSttResult(transcription) // 결과 변환 후 반환함
+    } catch(error) {
+      console.error('OPENAI error', error);
+      throw new InternalServerErrorException(`OpenAI STT Failed: ${error.message}`)
   }
+}
 
   /**
    * OpenAI Whisper API 응답을 표준 SttResult 형식으로 변환

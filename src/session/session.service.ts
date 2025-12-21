@@ -88,6 +88,7 @@ export class SessionService {
       const sttResult = await this.sttService.transcribeAudio(
         audioFile.buffer, // 오디오 버퍼 전달
         session.language, // 세션에 설정된 언어 사용
+        audioFile.originalname, // 기존 파일명
       )
       // sttResult = { fullText: "...", segments: [...] }
 
