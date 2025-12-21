@@ -8,6 +8,8 @@ import { AnalysisService } from 'src/analysis/analysis.service';
 import type { SttResult } from 'src/common/interfaces/stt-engine.interface';
 import type { AnalysisResult } from 'src/common/interfaces/analysis-engine.interface';
 import * as fs from 'fs/promises';
+import { TranscriptEntity } from 'src/stt/entities/transcript.entity';
+import { AnalysisEntity } from 'src/analysis/entities/analysis.entity';
 
 /**
  * 오디오 처리 워크플로우 총괄 서비스
@@ -20,6 +22,10 @@ export class SessionService {
   constructor(
     @InjectRepository(SessionEntity)
     private readonly sessionRepository: Repository<SessionEntity>, // 세션 DB 접근용 리포지토리
+    @InjectRepository(TranscriptEntity)
+    private readonly transcriptRepository: Repository<TranscriptEntity>, // Transcript DB 접근용 리포지토리
+    @InjectRepository(AnalysisEntity)
+    private readonly analysisRepository: Repository<AnalysisEntity>, // Analysis DB 접근용 리포지토리
     private readonly sttService: SttService,                       // STT 서비스 주입
     private analysisService: AnalysisService,                     // 분석 서비스 주입
   ) {}
@@ -116,24 +122,42 @@ export class SessionService {
     this.logger.log(`Session ${sessionId} status updated to ${status}`) // 로그 남김
   }
 
-  /** STT 결과 저장 로직 (현재 TODO) */
+  /** STT 결과 저장 로직 */
   private async saveTranscript(sessionId: string, sttResult: SttResult) {
-    // TranscriptEntity 저장 로직 (차후 구현)
+    const transcript = this.transcriptRepository.create({
+      sessionId,
+      fullText: sttResult.fullText,
+      language: sttResult.language,
+      duration: sttResult.duration,
+      segments: sttResult.segments, // 공통 인터페이스 사용으로 직접 할당 가능
+      speakers: sttResult.speakers,
+    })
+
+    await this.transcriptRepository.save(transcript)
     this.logger.log(`Transcript saved for session ${sessionId}`) // 로그 남김
     this.logger.log(`.   - Language: ${sttResult.language}`) // 언어 로그
     this.logger.log(`.   - Duration: ${sttResult.duration}`) // 길이 로그
     this.logger.log(`.   - Segments: ${sttResult.segments.length}`) // 세그먼트 수 로그
-    // TODO: TranscriptRepository를 통한 저장 로직 추가해야 함
   }
 
-  /** 분석 결과 저장 로직 (현재 TODO) */
+  /** 분석 결과 저장 로직 */
   private async saveAnalysis(
     sessionId: string,
     analysisResult: AnalysisResult,
   ) {
-    // AnalysisEntity 저장 로직 (차후 구현)
+    const analysis = this.analysisRepository.create({
+      sessionId,
+      structuralAnalysis: analysisResult.structuralAnalysis,
+      speechHabits: analysisResult.speechHabits,
+      overallScore: analysisResult.overallScore,
+      recommendations: analysisResult.recommendations,
+      engineUsed: 'gpt-4o-mini', // 사용된 분석 엔진 기록
+    })
+
+    await this.analysisRepository.save(analysis)
     this.logger.log(`Analysis saved for session ${sessionId}`) // 로그 남김
-    // TODO: AnalysisRepository를 통한 저장 로직 추가해야 함
+    this.logger.log(`.   - Overall Score: ${analysisResult.overallScore}`) // 점수 로그
+    this.logger.log(`.   - Recommendations: ${analysisResult.recommendations.length}`) // 추천사항 수 로그
   }
 
   /** 오디오 파일 삭제 */

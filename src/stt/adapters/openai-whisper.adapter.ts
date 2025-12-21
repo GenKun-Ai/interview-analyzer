@@ -45,13 +45,11 @@ export class OpenAIWhisperAdapter implements SttEngine {
   ): Promise<SttResult> {
     // OpenAI SDK는 Buffer를 직접 받을 수 있음 (File 객체 필요 없음)
     // toFile 헬퍼를 사용하여 File-like 객체 생성
-    const file = await (async () => {
-      // Node.js 환경 : Buffer를 File-like 객체로 변환
-      return Object.assign(audioBuffer, {
-        name: 'audio.mp3', // 파일 이름 지정함
-        type: 'audio/mpeg', // MIME 타입 지정함
-        lastModified: Date.now(), // 최종 수정 시간 기록함
-      })
+    // Node.js 환경 : Buffer를 File-like 객체로 변환
+    const file = Object.assign(audioBuffer, {
+      name: 'audio.mp3', // 파일 이름 지정함
+      type: 'audio/mpeg', // MIME 타입 지정함
+      lastModified: Date.now(), // 최종 수정 시간 기록함
     })
 
     // Whisper API 호출하여 음성 텍스트로 변환함
