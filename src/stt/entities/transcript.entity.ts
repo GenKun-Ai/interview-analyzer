@@ -23,8 +23,8 @@ export class TranscriptEntity extends CommonEntity {
   @Column({ type: 'varchar' })
   language: string; // 감지된 언어
 
-  @Column({ type: 'integer' })
-  duration: number; // 오디오 길이
+  @Column({ type: 'float' })
+  duration: number; // 오디오 길이 (초 단위, 소수점 포함)
 
   @Column({ type: 'text' })
   fullText: string; // 전체 텍스트
