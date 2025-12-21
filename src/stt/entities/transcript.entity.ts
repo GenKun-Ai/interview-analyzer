@@ -3,21 +3,7 @@
 import { CommonEntity } from 'src/common/entities/common.entity'
 import { SessionEntity } from 'src/session/session.entity'
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm'
-
-// 임시 타입 정의 
-interface TranscriptSegment {
-  id: number; // 세그먼트 ID
-  startTime: number; // 시작 시간
-  endTime: number; // 종료 시간
-  text: string; // 텍스트 내용
-  speaker: string; // 화자
-  confidence: number; // 신뢰도
-}
-
-interface Speaker {
-  id: string; // 화자 ID
-  label: string; // 화자 레이블
-}
+import type { TranscriptSegment, Speaker } from 'src/common/interfaces/stt-engine.interface'
 
 @Entity('transcripts')
 export class TranscriptEntity extends CommonEntity {
