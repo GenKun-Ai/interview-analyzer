@@ -5,9 +5,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SttController } from './stt.controller';
 import { OpenAIWhisperAdapter } from './adapters/openai-whisper.adapter';
 import { STT_ENGINE } from 'src/common/constans/injection-tokens';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { TranscriptEntity } from './entities/transcript.entity';
 
 @Module({
-  imports: [ConfigModule], // 설정 모듈 임포트
+  imports: [
+    ConfigModule, // 설정 모듈 임포트
+    TypeOrmModule.forFeature([TranscriptEntity]),
+  ],
   controllers: [SttController], // 컨트롤러 등록
   providers: [
     SttService,
