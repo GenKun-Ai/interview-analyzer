@@ -8,6 +8,7 @@ import { AppService } from './app.service';
 import { SttModule } from './stt/stt.module';
 import { SessionModule } from './session/session.module';
 import { AnalysisModule } from './analysis/analysis.module';
+import { BullModule } from '@nestjs/bullmq';
 
 const typeOrmAsyncOptions = {
   useFactory: async (
@@ -45,6 +46,18 @@ const typeOrmAsyncOptions = {
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.number().required(),
         DB_NAME: Joi.string().required(),
+        REDIS_HOST: Joi.string().required(),
+        REDIS_PORT: Joi.number().required(),
+      }),
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST'),
+          port: configService.get<number>('REDIS_PORT'), 
+        },
       }),
     }),
     TypeOrmModule.forRootAsync(typeOrmAsyncOptions),

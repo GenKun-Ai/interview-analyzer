@@ -139,16 +139,16 @@ export class SessionService {
     }
   }
 
-  // ===== Private Helper Methods =====
+  // ===== Public Helper Methods (Processor에서 사용) =====
 
   /** 세션 상태 업데이트 */
-  private async updateStatus(sessionId: string, status: SessionStatus) {
+  async updateStatus(sessionId: string, status: SessionStatus) {
     await this.sessionRepository.update(sessionId, { status }) // ID로 세션 상태 업데이트함
     this.logger.log(`Session ${sessionId} status updated to ${status}`) // 로그 남김
   }
 
   /** 세션 메타데이터 업데이트 (파일 경로, 오디오 길이 등) */
-  private async updateSessionMetadata(
+  async updateSessionMetadata(
     sessionId: string,
     metadata: Partial<SessionEntity>,
   ) {
@@ -157,7 +157,7 @@ export class SessionService {
   }
 
   /** STT 결과 저장 로직 */
-  private async saveTranscript(sessionId: string, sttResult: SttResult) {
+  async saveTranscript(sessionId: string, sttResult: SttResult) {
     const transcript = this.transcriptRepository.create({
       sessionId,
       fullText: sttResult.fullText,
@@ -175,7 +175,7 @@ export class SessionService {
   }
 
   /** 분석 결과 저장 로직 */
-  private async saveAnalysis(
+  async saveAnalysis(
     sessionId: string,
     analysisResult: AnalysisResult,
   ) {
@@ -195,7 +195,7 @@ export class SessionService {
   }
 
   /** 오디오 파일 삭제 */
-  private async deleteAudioFile(filePath?: string) {
+  async deleteAudioFile(filePath?: string) {
     if (!filePath) return // 파일 경로 없으면 아무것도 안 함
     try {
       await fs.unlink(filePath) // 파일 시스템에서 파일 삭제
