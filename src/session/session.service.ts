@@ -58,14 +58,15 @@ export class SessionService {
   /**
    * 오디오 처리 파이프라인 시작
    * 1. 세션 확인
-   * 2. 상태: TRANSCRIBING
-   * 3. STT 서비스 호출 (음성 -> 텍스트)
-   * 4. 텍스트 저장 (DB TODO)
-   * 5. 상태: ANALYZING
-   * 6. 분석 서비스 호출 (텍스트 -> 피드백)
-   * 7. 분석 결과 저장 (DB TODO)
-   * 8. 상태: COMPLETED
-   * 9. 요청 시 오디오 파일 정리
+   * 2. 파일 메타데이터 저장
+   * 3. 상태: TRANSCRIBING
+   * 4. STT 서비스 호출 (음성 -> 텍스트)
+   * 5. 텍스트 저장 + 오디오 길이 업데이트
+   * 6. 상태: ANALYZING
+   * 7. 분석 서비스 호출 (텍스트 -> 피드백)
+   * 8. 분석 결과 저장
+   * 9. 상태: COMPLETED
+   * 10. 요청 시 오디오 파일 정리
    * 실패 시 상태: FAILED 처리
    * @param sessionId - 처리할 세션 ID
    * @param audioFile - 처리할 오디오 파일 (Express.Multer.File 형식)
@@ -80,37 +81,60 @@ export class SessionService {
     if (!session) {
       throw new Error(`Session not found: ${sessionId}`) // 세션 없으면 에러 발생
     }
-    // 1. Update Status
+
+    // 1. 파일 메타데이터 저장
+    await this.updateSessionMetadata(sessionId, {
+      originalAudioPath: audioFile.path, // 디스크에 저장된 실제 경로
+      status: 'UPLOADING',
+    })
+    this.logger.log(`파일 저장 완료: ${audioFile.path} (크기: ${audioFile.size} bytes)`)
+
+    // 2. Update Status
     await this.updateStatus(sessionId, 'TRANSCRIBING') // 상태를 'TRANSCRIBING'으로 변경
 
     try {
-      // 2. STT Processing (음성 -> 텍스트)
+      // 3. STT Processing (음성 -> 텍스트)
+      // 디스크 모드: 파일에서 Buffer 읽기
+      const audioBuffer = await fs.readFile(audioFile.path)
+
       const sttResult = await this.sttService.transcribeAudio(
-        audioFile.buffer, // 오디오 버퍼 전달
+        audioBuffer, // 디스크에서 읽은 버퍼 전달
         session.language, // 세션에 설정된 언어 사용
         audioFile.originalname, // 기존 파일명
       )
-      // sttResult = { fullText: "...", segments: [...] }
+      // sttResult = { fullText: "...", segments: [...], duration: X }
 
+      // 4. STT 결과 저장 + 오디오 길이 업데이트
       await this.saveTranscript(sessionId, sttResult) // STT 결과 저장
+      await this.updateSessionMetadata(sessionId, {
+        audioDuration: Math.round(sttResult.duration), // 정수로 변환하여 저장
+      })
+      this.logger.log(`Audio duration saved: ${sttResult.duration}s`)
+
       await this.updateStatus(sessionId, 'ANALYZING') // 상태를 'ANALYZING'으로 변경
 
-      // 3. Analysis: 분석 처리 (텍스트 -> 피드백)
+      // 5. Analysis: 분석 처리 (텍스트 -> 피드백)
       const analysisResult = await this.analysisService.analyze(sttResult)
       await this.saveAnalysis(sessionId, analysisResult) // 분석 결과 저장
       // analysisResult = { score: 85, feedbakcs: [...], ...}
-      
-      // 4. Complete
+
+      // 6. Complete
       await this.updateStatus(sessionId, 'COMPLETED') // 상태를 'COMPLETED'로 변경
 
-      // 5. Cleanup if requested
+      // 7. Cleanup if requested
       if (session.deleteAfterAnalysis) {
         await this.deleteAudioFile(session.originalAudioPath) // 분석 후 오디오 삭제 옵션 처리
       }
 
       return { sttResult, analysisResult } // 최종 결과 반환
     } catch (error) {
-      await this.updateStatus(sessionId, 'FAILED') // 에러 발생 시 상태 'FAILED'로 변경
+      // 에러 정보 저장
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      await this.updateSessionMetadata(sessionId, {
+        status: 'FAILED' as any,
+        errorMessage,
+      })
+      this.logger.error(`Session ${sessionId} failed: ${errorMessage}`)
       throw error // 에러 다시 던짐
     }
   }
@@ -121,6 +145,15 @@ export class SessionService {
   private async updateStatus(sessionId: string, status: string) {
     await this.sessionRepository.update(sessionId, { status } as any) // ID로 세션 상태 업데이트함
     this.logger.log(`Session ${sessionId} status updated to ${status}`) // 로그 남김
+  }
+
+  /** 세션 메타데이터 업데이트 (파일 경로, 오디오 길이 등) */
+  private async updateSessionMetadata(
+    sessionId: string,
+    metadata: Partial<SessionEntity>,
+  ) {
+    await this.sessionRepository.update(sessionId, metadata) // 메타데이터 업데이트
+    this.logger.log(`Session ${sessionId} metadata updated`)
   }
 
   /** STT 결과 저장 로직 */
