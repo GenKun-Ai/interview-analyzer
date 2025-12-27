@@ -12,7 +12,15 @@ export const multerConfig: MulterOptions = {
     // 저장 경로: uploads/{sessionId}/
     destination: (req: Request, file: Express.Multer.File, cb) => {
       const sessionId = req.params.id;
-      const uploadPath = `./uploads/${sessionId}`;
+
+      // 경로 탐색 공격 방지: 영문자, 숫자, 하이픈, 언더스코어만 허용
+      const sanitizedSessionId = sessionId.replace(/[^a-zA-Z0-9-_]/g, '');
+
+      if (!sanitizedSessionId || sanitizedSessionId !== sessionId) {
+        return cb(new BadRequestException('유효하지 않은 세션 ID 형식입니다'), '');
+      }
+
+      const uploadPath = `./uploads/${sanitizedSessionId}`;
 
       // 세션별 폴더 생성 (동기적으로)
       const fs = require('fs');
