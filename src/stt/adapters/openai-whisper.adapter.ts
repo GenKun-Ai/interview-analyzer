@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { Injectable, InternalServerErrorException } from "@nestjs/common";
+import { Injectable, InternalServerErrorException, Logger } from "@nestjs/common";
 import OpenAI, { toFile } from "openai";
 import {
   SttEngine,
@@ -13,6 +13,7 @@ import {
  */
 @Injectable()
 export class OpenAIWhisperAdapter implements SttEngine {
+  private readonly logger = new Logger(OpenAIWhisperAdapter.name)
   private client: OpenAI // OpenAI 클라이언트 인스턴스
 
   constructor(private configService: ConfigService) {
@@ -45,8 +46,8 @@ export class OpenAIWhisperAdapter implements SttEngine {
   ): Promise<SttResult> {
 
     try {
-      // 로그 시작 알림
-      console.log(`[OpenAI] 파일 처리 중... (size: ${audioBuffer.length})`)
+      // 음성 파일 처리 시작 로깅
+      this.logger.log(`음성 파일 처리 시작: ${options?.filename || 'audio.mp3'} (크기: ${audioBuffer.length} bytes)`)
       const startTime = Date.now()
 
       const originalName = options?.filename || 'audio.mp3'
@@ -68,14 +69,14 @@ export class OpenAIWhisperAdapter implements SttEngine {
         timestamp_granularities: ['word', 'segment'], // 단어, 세그먼트 타임스탬프 포함함
       })
 
-      // 로그 추가
+      // 처리 완료 로깅
       const duration = (Date.now() - startTime) / 1000
-      console.log(`[OpenAI] 변환 완료! took ${duration}`)
+      this.logger.log(`음성 변환 완료 (소요 시간: ${duration.toFixed(2)}초)`)
 
       return this.transformToSttResult(transcription) // 결과 변환 후 반환함
     } catch(error) {
-      console.error('OPENAI error', error);
-      throw new InternalServerErrorException(`OpenAI STT Failed: ${error.message}`)
+      this.logger.error(`OpenAI Whisper API 오류: ${error.message}`, error.stack)
+      throw new InternalServerErrorException(`음성 텍스트 변환 실패: ${error.message}`)
   }
 }
 

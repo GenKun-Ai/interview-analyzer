@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { CreateAnalysisDto } from './dto/create-analysis.dto';
 import { UpdateAnalysisDto } from './dto/update-analysis.dto';
 import OpenAI from 'openai';
-import { response } from 'express';
 import type { SttResult } from 'src/common/interfaces/stt-engine.interface';
 import type { AnalysisResult } from 'src/common/interfaces/analysis-engine.interface';
 
@@ -125,7 +124,7 @@ export class AnalysisService {
         },
       ],
     });
-    this.logger.log(JSON.stringify(response, null, 2)); // 응답 로깅
+    this.logger.log(`테스트 연결 성공: ${rsp.choices[0].message.content}`); // 응답 로깅
 
     return rsp.choices[0].message.content ?? ''; // 응답 내용 반환
   }

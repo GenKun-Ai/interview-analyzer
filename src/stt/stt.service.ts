@@ -20,11 +20,10 @@ export class SttService {
    * 오디오 버퍼를 STT 엔진을 통해 텍스트로 변환
    * @param audioBuffer - 변환할 오디오 파일 버퍼
    * @param language - 오디오 언어 (예: 'ko', 'ja', 'en')
+   * @param filename - 원본 파일명
    * @returns STT 변환 결과 (텍스트, 세그먼트 등)
    */
   async transcribeAudio(audioBuffer: Buffer, language: string, filename: string) {
-    console.log('Using STT Engine', this.sttEngine) // 현재 사용 중인 STT 엔진 로깅함
-
     // STT 엔진에 오디오와 옵션 전달하여 변환 실행함
     return await this.sttEngine.transcribe(audioBuffer, {
       language, // 언어 설정
