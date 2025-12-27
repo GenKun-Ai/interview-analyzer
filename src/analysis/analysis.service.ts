@@ -14,7 +14,7 @@ export class AnalysisService {
   constructor() {
     // API 키 없으면 에러 발생시킴
     if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OEPN_API_KEY is not set');
+      throw new Error('OEPNAI_API_KEY is not set');
     }
 
     // OpenAI 클라이언트 초기화

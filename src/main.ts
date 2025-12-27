@@ -29,7 +29,7 @@ class Application {
     this.corsOriginList = process.env.CORS_ORIGIN_LIST
       ? process.env.CORS_ORIGIN_LIST.split(',').map((origin) => origin.trim())
       : ['*'];
-    this.ADMIN_USER = process.env.AMDIN_USER || 'root';
+    this.ADMIN_USER = process.env.ADMIN_USER || 'root'
     this.ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'root';
   }
 
