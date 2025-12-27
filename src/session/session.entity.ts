@@ -4,8 +4,8 @@ import { CommonEntity } from 'src/common/entities/common.entity'
 import { TranscriptEntity } from 'src/stt/entities/transcript.entity';
 import { Column, Entity, OneToOne } from 'typeorm'
 
-// 임시 타입 정의
-type SessionStatus =
+// 세션 상태 타입 (enum으로 변경 가능)
+export type SessionStatus =
   | 'CREATED'
   | 'UPLOADING'
   | 'TRANSCRIBING'

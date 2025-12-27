@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SessionEntity } from './session.entity';
+import { SessionEntity, SessionStatus } from './session.entity';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { Repository } from 'typeorm';
 import { SttService } from 'src/stt/stt.service';
@@ -131,7 +131,7 @@ export class SessionService {
       // 에러 정보 저장
       const errorMessage = error instanceof Error ? error.message : String(error)
       await this.updateSessionMetadata(sessionId, {
-        status: 'FAILED' as any,
+        status: 'FAILED',
         errorMessage,
       })
       this.logger.error(`Session ${sessionId} failed: ${errorMessage}`)
@@ -142,8 +142,8 @@ export class SessionService {
   // ===== Private Helper Methods =====
 
   /** 세션 상태 업데이트 */
-  private async updateStatus(sessionId: string, status: string) {
-    await this.sessionRepository.update(sessionId, { status } as any) // ID로 세션 상태 업데이트함
+  private async updateStatus(sessionId: string, status: SessionStatus) {
+    await this.sessionRepository.update(sessionId, { status }) // ID로 세션 상태 업데이트함
     this.logger.log(`Session ${sessionId} status updated to ${status}`) // 로그 남김
   }
 
