@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Logger,
   Param,
@@ -42,12 +43,28 @@ export class SessionController {
     return this.sessionService.create(body.language);
   }
 
+  @Get()
+  @ApiOperation({ summary: '세션 목록 조회', description: '모든 세션 목록을 최신순으로 조회합니다' })
+  @ApiResponse({ status: 200, description: '조회 성공', type: [SessionEntity] })
+  async findAll() {
+    return this.sessionService.findAll();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: '세션 조회', description: 'ID로 세션 상세 정보를 조회합니다' })
   @ApiResponse({ status: 200, description: '조회 성공', type: SessionEntity })
   @ApiResponse({ status: 404, description: '세션을 찾을 수 없음' })
   findOne(@Param('id') id: string) {
     return this.sessionService.findOne(id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: '세션 삭제', description: '세션 및 관련 데이터(오디오 파일, 분석 결과)를 삭제합니다' })
+  @ApiResponse({ status: 200, description: '삭제 성공' })
+  @ApiResponse({ status: 404, description: '세션을 찾을 수 없음' })
+  async remove(@Param('id') id: string) {
+    await this.sessionService.remove(id);
+    return { message: '세션이 삭제되었습니다', sessionId: id };
   }
 
   @Get(':id/audio')
