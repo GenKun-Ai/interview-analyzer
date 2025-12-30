@@ -6,13 +6,14 @@ import {
   Logger,
   Param,
   Post,
+  Req,
   Res,
   UploadedFile,
   UseInterceptors,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { InjectQueue } from '@nestjs/bullmq';
@@ -68,10 +69,12 @@ export class SessionController {
   }
 
   @Get(':id/audio')
-  @ApiOperation({ summary: '오디오 파일 스트리밍', description: '세션의 원본 오디오 파일을 스트리밍합니다 (타임라인 재생용)' })
-  @ApiResponse({ status: 200, description: '오디오 파일 스트리밍 성공' })
+  @ApiOperation({ summary: '오디오 파일 스트리밍', description: '세션의 원본 오디오 파일을 스트리밍합니다 (타임라인 재생용, Range 요청 지원)' })
+  @ApiResponse({ status: 200, description: '전체 파일 스트리밍 성공' })
+  @ApiResponse({ status: 206, description: 'Partial Content - Range 요청 처리 성공' })
   @ApiResponse({ status: 404, description: '파일을 찾을 수 없음' })
-  async streamAudio(@Param('id') id: string, @Res() res: Response) {
+  @ApiResponse({ status: 416, description: 'Range 요청 범위가 유효하지 않음' })
+  async streamAudio(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
     const session = await this.sessionService.findOne(id);
 
     if (!session || !session.originalAudioPath) {
@@ -86,6 +89,10 @@ export class SessionController {
       return res.status(404).json({ message: '파일이 삭제되었거나 존재하지 않습니다' });
     }
 
+    // 파일 정보 조회
+    const stat = fs.statSync(session.originalAudioPath);
+    const fileSize = stat.size;
+
     // MIME 타입 설정
     const ext = path.extname(session.originalAudioPath).toLowerCase();
     const mimeTypes: { [key: string]: string } = {
@@ -97,12 +104,45 @@ export class SessionController {
       '.flac': 'audio/flac',
     };
 
-    res.setHeader('Content-Type', mimeTypes[ext] || 'application/octet-stream');
-    res.setHeader('Accept-Ranges', 'bytes'); // 재생 위치 탐색 지원
+    const mimeType = mimeTypes[ext] || 'application/octet-stream';
 
-    // 파일 스트리밍
-    const fileStream = fs.createReadStream(session.originalAudioPath);
-    fileStream.pipe(res);
+    // Range 요청 처리
+    const range = req.headers.range;
+
+    if (range) {
+      // Range 헤더 파싱: "bytes=start-end"
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      // 범위 검증
+      if (start >= fileSize || end >= fileSize) {
+        res.status(416).setHeader('Content-Range', `bytes */${fileSize}`);
+        return res.end();
+      }
+
+      const chunkSize = end - start + 1;
+
+      // 206 Partial Content 응답
+      res.status(206);
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Content-Length', chunkSize);
+      res.setHeader('Content-Type', mimeType);
+
+      // 지정된 범위만 스트리밍
+      const fileStream = fs.createReadStream(session.originalAudioPath, { start, end });
+      fileStream.pipe(res);
+    } else {
+      // Range 요청이 없으면 전체 파일 스트리밍
+      res.status(200);
+      res.setHeader('Content-Length', fileSize);
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Accept-Ranges', 'bytes');
+
+      const fileStream = fs.createReadStream(session.originalAudioPath);
+      fileStream.pipe(res);
+    }
   }
 
   /**
