@@ -9,7 +9,9 @@ import { Column, Entity, JoinColumn, OneToOne } from "typeorm"
 // analysis/entities/analysis.entity.ts
 @Entity('analyses')
 export class AnalysisEntity extends CommonEntity {
-  @OneToOne(() => SessionEntity, (session) => session.analysis)
+  @OneToOne(() => SessionEntity, (session) => session.analysis, {
+    onDelete: 'CASCADE'
+  })
   @JoinColumn()
   session: SessionEntity; // 분석과 연결된 세션
 

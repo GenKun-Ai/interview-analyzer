@@ -7,7 +7,9 @@ import type { TranscriptSegment, Speaker } from 'src/common/interfaces/stt-engin
 
 @Entity('transcripts')
 export class TranscriptEntity extends CommonEntity {
-  @OneToOne(() => SessionEntity, (session) => session.transcript)
+  @OneToOne(() => SessionEntity, (session) => session.transcript, {
+    onDelete: 'CASCADE'
+  })
   @JoinColumn()
   session: SessionEntity; // 변환과 연결된 세션
 
