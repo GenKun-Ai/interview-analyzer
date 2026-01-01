@@ -4,7 +4,7 @@
 
 NestJS 기반의 RESTful API 서버로, 오디오 파일 업로드, STT 처리, AI 분석, 오디오 스트리밍 기능을 제공합니다.
 
-**📌 [전체 프로젝트 보기](https://github.com/ias-kim/genkun-platform)**
+**📌 [전체 프로젝트 보기](https://github.com/ias-kim/genkun)**
 
 ---
 
@@ -35,22 +35,10 @@ NestJS 기반의 RESTful API 서버로, 오디오 파일 업로드, STT 처리, 
 
 ## 🔥 주요 기능
 
-### 1. 비동기 오디오 처리
-- BullMQ 기반 백그라운드 처리로 응답 시간 2초 이내
-- 실시간 작업 진행 상황 추적
-
-### 2. 다중 STT 엔진 지원
-- Adapter Pattern으로 OpenAI Whisper / Google STT 유연하게 전환
-- 다중 언어 지원 (ja, ko)
-
-### 3. HTTP Range 오디오 스트리밍
-- 206 Partial Content 지원으로 브라우저 seek 기능 구현
-- 대용량 파일 효율적 전송
-
-### 4. AI 기반 음성 분석
-- GPT-4를 활용한 구조적 분석 및 피드백 생성
-- 말하기 습관, 개선 추천사항 제공
-
+- 대용량 오디오 비동기 처리
+- 다중 STT 엔진 지원
+- AI 기반 음성 분석 결과 제공
+- 오디오 스트리밍 (재생 위치 이동 지원)
 ---
 
 ## 📂 프로젝트 구조
@@ -128,25 +116,6 @@ Swagger UI: `http://localhost:5000/docs`
 
 ---
 
-## 🏗 핵심 아키텍처
-
-### Adapter Pattern
-```
-SttService (공통 인터페이스)
-├── OpenAI Whisper Adapter
-└── Google STT Adapter
-```
-
-### 비동기 처리 파이프라인
-```
-Upload → Queue (202 응답) → Background Processing
-                              ├─ STT
-                              ├─ Analysis
-                              └─ Save
-```
-
----
-
 ## 📝 환경 변수
 
 ```env
@@ -176,19 +145,15 @@ CORS_ORIGIN_LIST=http://localhost:5173
 
 ## 📊 성능 최적화
 
-- ✅ BullMQ 비동기 처리로 응답 시간 2초 이내
-- ✅ HTTP Range 요청으로 대역폭 절약
-- ✅ TypeORM 인덱싱 및 쿼리 최적화
-- ✅ Node.js 메모리 8GB 할당
+- 비동기 처리 및 스트리밍 최적화 적용
+- DB 쿼리 및 리소스 사용 최적화
 
 ---
 
 ## 🔐 보안
 
-- ✅ 환경 변수로 민감 정보 관리
-- ✅ Multer 파일 검증 (MIME 타입, 크기 제한)
-- ✅ CORS 설정
-- ✅ Swagger Basic Auth
+- 환경 변수로 민감 정보 관리
+- 파일 업로드 및 접근 제어 기반 보안 적용
 
 ---
 
@@ -209,4 +174,4 @@ CORS_ORIGIN_LIST=http://localhost:5173
 ---
 
 **📌 전체 프로젝트 (Frontend 포함) 보기:**
-https://github.com/ias-kim/genkun-platform
+https://github.com/ias-kim/genkun
