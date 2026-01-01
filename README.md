@@ -1,65 +1,86 @@
-# GenKun Backend
+# 言君(GenKun) バックエンド
 
-> AI 음성 분석 시스템 백엔드 API 서버
+> AI音声分析システム バックエンドAPIサーバー
 
-NestJS 기반의 RESTful API 서버로, 오디오 파일 업로드, STT 처리, AI 분석, 오디오 스트리밍 기능을 제공합니다.
+NestJSベースのRESTful APIサーバーで、オーディオファイルアップロード、STT処理、AI分析、オーディオストリーミング機能を提供します。
 
-**📌 [전체 프로젝트 보기](https://github.com/ias-kim/genkun)**
+このプロジェクトのREDMEは日本語と韓国語で提供いたします。
+<br />
+이 프로젝트의 README는 한국어와 일본어로 제공됩니다.
+
+- [日本語 (Japanese)](README.md)
+- [한국어 (Korean)](README.ko.md)
+
+<br />
+
+**📌 [プロジェクト全体を見る](https://github.com/ias-kim/genkun-platform)**
 
 ---
 
-## 🛠 기술 스택
+## 🛠 技術スタック
 
-### Core
-- **NestJS** 11.0.1 - 메인 프레임워크
-- **TypeScript** 5.7.3 - 프로그래밍 언어
-- **Node.js** 20.x - 런타임
+### コア
+- **NestJS** 11.0.1 - メインフレームワーク
+- **TypeScript** 5.7.3 - プログラミング言語
+- **Node.js** 20.x - ランタイム
 
-### Database & Cache
-- **PostgreSQL** 15 - 메인 데이터베이스
+### データベース & キャッシュ
+- **PostgreSQL** 15 - メインデータベース
 - **TypeORM** 0.3.28 - ORM
-- **Redis** 7 - 메시지 큐 & 캐시
+- **Redis** 7 - メッセージキュー & キャッシュ
 
-### Message Queue
-- **BullMQ** 5.66.3 - 비동기 작업 큐
+### メッセージキュー
+- **BullMQ** 5.66.3 - 非同期タスクキュー
 
 ### AI/ML
-- **OpenAI Whisper API** - STT (음성→텍스트)
-- **OpenAI GPT-4** - 음성 분석 및 피드백
+- **OpenAI Whisper API** - STT (音声→テキスト)
+- **OpenAI GPT-4** - 音声分析およびフィードバック
 
 ### DevOps
-- **Docker** & **Docker Compose** - 컨테이너화
-- **Swagger** - API 문서 자동 생성
+- **Docker** & **Docker Compose** - コンテナ化
+- **Swagger** - APIドキュメント自動生成
 
 ---
 
-## 🔥 주요 기능
+## 🔥 主要機能
 
-- 대용량 오디오 비동기 처리
-- 다중 STT 엔진 지원
-- AI 기반 음성 분석 결과 제공
-- 오디오 스트리밍 (재생 위치 이동 지원)
+### 1. 非同期オーディオ処理
+- BullMQベースのバックグラウンド処理により応答時間2秒以内
+- リアルタイムでのタスク進行状況追跡
+
+### 2. 複数STTエンジンサポート
+- アダプターパターンによりOpenAI Whisper / Google STTを柔軟に切り替え可能
+- 多言語サポート (ja, ko)
+
+### 3. HTTP Rangeオーディオストリーミング
+- 206 Partial Contentサポートによりブラウザのシーク機能を実現
+- 大容量ファイルの効率的な転送
+
+### 4. AIベースの音声分析
+- GPT-4を活用した構造分析およびフィードバック生成
+- 話し方の癖、改善推奨事項の提供
+
 ---
 
-## 📂 프로젝트 구조
+## 📂 プロジェクト構造
 
 ```
 src/
-├── analysis/          # 음성 분석 모듈
-│   ├── adapters/      # AI 분석 엔진 어댑터
+├── analysis/          # 音声分析モジュール
+│   ├── adapters/      # AI分析エンジンアダプター
 │   ├── entities/
 │   └── analysis.service.ts
-├── stt/               # STT 모듈
-│   ├── adapters/      # Whisper, Google STT 어댑터
+├── stt/               # STTモジュール
+│   ├── adapters/      # Whisper, Google STTアダプター
 │   ├── entities/
 │   └── stt.service.ts
-├── session/           # 세션 관리 모듈
-│   ├── processors/    # BullMQ 프로세서
+├── session/           # セッション管理モジュール
+│   ├── processors/    # BullMQプロセッサー
 │   ├── entities/
 │   └── session.service.ts
-├── common/            # 공통 모듈
-│   ├── config/        # 설정 파일
-│   ├── interfaces/    # 공통 인터페이스
+├── common/            # 共通モジュール
+│   ├── config/        # 設定ファイル
+│   ├── interfaces/    # 共通インターフェース
 │   └── entities/
 ├── app.module.ts
 └── main.ts
@@ -67,56 +88,75 @@ src/
 
 ---
 
-## 🚀 빠른 시작
+## 🚀 クイックスタート
 
-### 사전 요구사항
-- Node.js 20.x 이상
+### 前提条件
+- Node.js 20.x 以上
 - Docker & Docker Compose
-- OpenAI API Key
+- OpenAI APIキー
 
-### 설치 및 실행
+### インストールと実行
 
 ```bash
-# 1. 의존성 설치
+# 1. 依存関係のインストール
 npm install
 
-# 2. 환경 변수 설정
+# 2. 環境変数の設定
 cp .env.example .env
-# .env 파일에서 OPENAI_API_KEY, DB 설정
+# .envファイルでOPENAI_API_KEY, DB設定
 
-# 3. Docker 컨테이너 시작 (PostgreSQL, Redis)
+# 3. Dockerコンテナの起動 (PostgreSQL, Redis)
 docker-compose up -d
 
-# 4. 개발 서버 실행
+# 4. 開発サーバーの実行
 npm run start:dev
 ```
 
-서버 실행: `http://localhost:5000`
+サーバー実行: `http://localhost:5000`
 
-### API 문서
+### APIドキュメント
 
 Swagger UI: `http://localhost:5000/docs`
-- Username: `root`
-- Password: `root`
+- ユーザー名: `root`
+- パスワード: `root`
 
 ---
 
-## 🔌 주요 API 엔드포인트
+## 🔌 主要APIエンドポイント
 
-### 세션 관리
-- `POST /session` - 새 세션 생성
-- `GET /session` - 세션 목록 조회
-- `GET /session/:id` - 세션 상세 조회
-- `DELETE /session/:id` - 세션 삭제
+### セッション管理
+- `POST /session` - 新規セッション作成
+- `GET /session` - セッションリスト照会
+- `GET /session/:id` - セッション詳細照会
+- `DELETE /session/:id` - セッション削除
 
-### 오디오 처리
-- `POST /session/:id/upload` - 오디오 업로드 (비동기)
-- `GET /session/:id/job-status` - 작업 진행 상황 조회
-- `GET /session/:id/audio` - 오디오 스트리밍 (Range 지원)
+### オーディオ処理
+- `POST /session/:id/upload` - オーディオアップロード (非同期)
+- `GET /session/:id/job-status` - タスク進行状況照会
+- `GET /session/:id/audio` - オーディオストリーミング (Rangeサポート)
 
 ---
 
-## 📝 환경 변수
+## 🏗 コアアーキテクチャ
+
+### アダプターパターン
+```
+SttService (共通インターフェース)
+├── OpenAI Whisper アダプター
+└── Google STT アダプター
+```
+
+### 非同期処理パイプライン
+```
+Upload → Queue (202応答) → Background Processing
+                              ├─ STT
+                              ├─ Analysis
+                              └─ Save
+```
+
+---
+
+## 📝 環境変数
 
 ```env
 # Server
@@ -143,35 +183,39 @@ CORS_ORIGIN_LIST=http://localhost:5173
 
 ---
 
-## 📊 성능 최적화
+## 📊 パフォーマンス最適化
 
-- 비동기 처리 및 스트리밍 최적화 적용
-- DB 쿼리 및 리소스 사용 최적화
-
----
-
-## 🔐 보안
-
-- 환경 변수로 민감 정보 관리
-- 파일 업로드 및 접근 제어 기반 보안 적용
+- ✅ BullMQ非同期処理により応答時間2秒以内
+- ✅ HTTP Rangeリクエストにより帯域幅を節約
+- ✅ TypeORMインデックス作成とクエリ最適化
+- ✅ Node.jsメモリ8GB割り当て
 
 ---
 
-## 📚 참고 자료
+## 🔐 セキュリティ
 
-- [NestJS 공식 문서](https://docs.nestjs.com/)
-- [TypeORM 공식 문서](https://typeorm.io/)
-- [BullMQ 공식 문서](https://docs.bullmq.io/)
-- [OpenAI API 문서](https://platform.openai.com/docs)
+- ✅ 環境変数による機密情報管理
+- ✅ Multerファイル検証 (MIMEタイプ、サイズ制限)
+- ✅ CORS設定
+- ✅ Swagger Basic Auth
 
 ---
 
-## 👤 개발자
+## 📚 参考資料
+
+- [NestJS公式ドキュメント](https://docs.nestjs.com/)
+- [TypeORM公式ドキュメント](https://typeorm.io/)
+- [BullMQ公式ドキュメント](https://docs.bullmq.io/)
+- [OpenAI APIドキュメント](https://platform.openai.com/docs)
+
+---
+
+## 👤 開発者
 
 **Gwankwon An**
 - GitHub: [@ias-kim](https://github.com/ias-kim)
 
 ---
 
-**📌 전체 프로젝트 (Frontend 포함) 보기:**
-https://github.com/ias-kim/genkun
+**📌 プロジェクト全体 (フロントエンド含む) を見る:**
+https://github.com/ias-kim/genkun-platform
