@@ -13,7 +13,7 @@ NestJS 기반의 RESTful API 서버로, 오디오 파일 업로드, STT 처리, 
 
 <br />
 
-**📌 [전체 프로젝트 보기](https://github.com/ias-kim/genkun-platform)**
+**📌 [전체 프로젝트 보기](https://github.com/ias-kim/genkun)**
 
 ---
 
@@ -218,4 +218,4 @@ CORS_ORIGIN_LIST=http://localhost:5173
 ---
 
 **📌 전체 프로젝트 (Frontend 포함) 보기:**
-https://github.com/ias-kim/genkun-platform
+https://github.com/ias-kim/genkun

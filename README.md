@@ -13,7 +13,7 @@ NestJSベースのRESTful APIサーバーで、オーディオファイルアッ
 
 <br />
 
-**📌 [プロジェクト全体を見る](https://github.com/ias-kim/genkun-platform)**
+**📌 [プロジェクト全体を見る](https://github.com/ias-kim/genkun)**
 
 ---
 
@@ -218,4 +218,4 @@ CORS_ORIGIN_LIST=http://localhost:5173
 ---
 
 **📌 プロジェクト全体 (フロントエンド含む) を見る:**
-https://github.com/ias-kim/genkun-platform
+https://github.com/ias-kim/genkun
