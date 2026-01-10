@@ -10,6 +10,7 @@ import type { AnalysisResult } from 'src/common/interfaces/analysis-engine.inter
 import * as fs from 'fs/promises';
 import { TranscriptEntity } from 'src/stt/entities/transcript.entity';
 import { AnalysisEntity } from 'src/analysis/entities/analysis.entity';
+import { UserEntity } from 'src/users/entities/user.entity';
 
 /**
  * 오디오 처리 워크플로우 총괄 서비스
@@ -31,9 +32,12 @@ export class SessionService {
   ) {}
 
   /** 신규 세션 생성 */
-  async create(language: string) {
-    const session = this.sessionRepository.create({ language }) // 언어 설정하여 세션 객체 생성
-    return this.sessionRepository.save(session) // DB에 저장
+  async create(user: UserEntity, language: string) {
+    const session = this.sessionRepository.create({
+      user, // 현재 로그인한 유저 설정, userId 자동 설정됨
+      language
+    });
+    return this.sessionRepository.save(session);
   }
 
   /** 모든 세션 목록 조회 (최신순 정렬) */
@@ -74,6 +78,7 @@ export class SessionService {
   /** DTO 기반 신규 세션 생성 */
   async createSession(dto: CreateSessionDto): Promise<SessionEntity> {
     const session = this.sessionRepository.create({
+      userId: dto.userId,
       language: dto.language, // DTO에서 언어 가져옴
       description: dto.description, // DTO에서 설명 가져옴
       status: 'CREATED', // 초기 상태는 'CREATED'로 설정함
@@ -184,6 +189,7 @@ export class SessionService {
 
   /** STT 결과 저장 로직 */
   async saveTranscript(sessionId: string, sttResult: SttResult) {
+
     const transcript = this.transcriptRepository.create({
       sessionId,
       fullText: sttResult.fullText,
