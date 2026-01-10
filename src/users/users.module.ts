@@ -7,17 +7,18 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { UserEntity } from './entities/user.entity';
 import { GoogleStrategy } from '../common/google.strategies';
+import { JwtStrategy } from '../common/jwt.strategy';
 
 /**
  * Users 모듈
  * - TypeORM: UserEntity 연결
- * - Passport: Google OAuth 전략 등록
+ * - Passport: Google OAuth, JWT 전략 등록
  * - JWT: 토큰 생성용 (.env에서 JWT_SECRET 읽어옴, 기본값 1일)
  */
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserEntity]), // UserEntity 사용 설정
-    PassportModule.register({ defaultStrategy: 'google' }), // Passport 기본 전략: google
+    PassportModule.register({ defaultStrategy: 'jwt' }), // Passport 기본 전략: jwt
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -30,7 +31,7 @@ import { GoogleStrategy } from '../common/google.strategies';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, GoogleStrategy], // GoogleStrategy Provider 등록
-  exports: [UsersService], // 다른 모듈에서 UsersService 사용 가능하도록 export
+  providers: [UsersService, GoogleStrategy, JwtStrategy], // GoogleStrategy, JwtStrategy Provider 등록
+  exports: [UsersService, TypeOrmModule], // UserRepository도 export (JwtStrategy에서 사용)
 })
 export class UsersModule {}

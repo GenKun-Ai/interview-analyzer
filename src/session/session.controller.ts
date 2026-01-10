@@ -12,9 +12,10 @@ import {
   UseInterceptors,
   NotFoundException,
   BadRequestException,
+  UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
@@ -23,16 +24,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { SessionEntity } from './session.entity';
 import { Repository } from 'typeorm';
 import { multerConfig } from '../common/config/multer.config';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { GetUser } from '../common/decorators/get-user.decorator';
+import { UserEntity } from 'src/users/entities/user.entity';
 
 @ApiTags('Session')
 @Controller('session')
+@UseGuards(JwtAuthGuard) // 모든 엔드포인트에 JWT 인증 적용
+@ApiBearerAuth() // Swagger에 Bearer 토큰 입력란 표시
 export class SessionController {
   private readonly logger = new Logger(SessionController.name);
 
   constructor(
     private readonly sessionService: SessionService,
     @InjectRepository(SessionEntity)
-    private readonly sessionRepose: Repository<SessionEntity>,
+    private readonly sessionRepository: Repository<SessionEntity>,
     @InjectQueue('audio-processing')
     private readonly audioQueue: Queue, // BullMQ 큐 주입
   ) {}
@@ -40,8 +46,11 @@ export class SessionController {
   @Post()
   @ApiOperation({ summary: '새 세션 생성', description: '음성 분석을 위한 새 세션을 생성합니다' })
   @ApiResponse({ status: 201, description: '세션 생성 성공', type: SessionEntity })
-  async create(@Body() body: { language: string} ) {
-    return this.sessionService.create(body.language);
+  async create(
+    @GetUser() user: UserEntity, // 현재 로그인한 유저 정보
+    @Body() body: { language: string },
+  ) {
+    return this.sessionService.create(user, body.language);
   }
 
   @Get()

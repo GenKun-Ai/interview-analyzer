@@ -9,6 +9,7 @@ import { AnalysisModule } from 'src/analysis/analysis.module';
 import { TranscriptEntity } from 'src/stt/entities/transcript.entity';
 import { AnalysisEntity } from 'src/analysis/entities/analysis.entity';
 import { AudioProcessingProcessor } from './processors/audio-processing.processor';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AudioProcessingProcessor } from './processors/audio-processing.processo
     }),
     AnalysisModule,
     forwardRef(() => SttModule),
+    UsersModule, // JWT 인증 및 UserRepository 사용
   ],
   providers: [SessionService, AudioProcessingProcessor],
   controllers: [SessionController],
