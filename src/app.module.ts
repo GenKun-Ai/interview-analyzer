@@ -9,6 +9,7 @@ import { SttModule } from './stt/stt.module';
 import { SessionModule } from './session/session.module';
 import { AnalysisModule } from './analysis/analysis.module';
 import { BullModule } from '@nestjs/bullmq';
+import { UsersModule } from './users/users.module';
 
 const typeOrmAsyncOptions = {
   useFactory: async (
@@ -64,6 +65,7 @@ const typeOrmAsyncOptions = {
     SttModule,
     SessionModule,
     AnalysisModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
