@@ -82,6 +82,8 @@ class Application {
   }
 
   async boostrap() {
+    // Global prefix 설정 (모든 라우트에 /api 추가)
+    this.server.setGlobalPrefix('api');
     await this.setUpGlobalMiddleWare();
     await this.server.listen(this.PORT);
   }
