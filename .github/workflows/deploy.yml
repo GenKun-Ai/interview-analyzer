@@ -78,7 +78,7 @@ jobs:
             fi
 
             # docker-compose.prod.yml 다운로드 (GitHub에서)
-            curl -o docker-compose.prod.yml https://raw.githubusercontent.com/${{ github.repository }}/main/docker-compose.prod.yml
+            curl -o docker-compose.prod.yml https://raw.githubusercontent.com/${{ github.repository }}/dev/docker-compose.prod.yml
 
             # Docker Hub에서 최신 이미지 pull
             sudo docker compose -f docker-compose.prod.yml pull backend < /dev/null
