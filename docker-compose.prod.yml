@@ -60,17 +60,39 @@ services:
     command: ["node", "dist/worker.js"]   # 핵심
     environment:
       NODE_ENV: production
+      PORT: 5000
 
+      # Database
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
 
+      # Redis
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES: ${JWT_EXPIRES:-1d}
+
+      # Google OAuth
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_CALLBACK: ${GOOGLE_CALLBACK}
+
+      # OpenAI
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+      # CORS
+      CORS_ORIGIN_LIST: ${CORS_ORIGIN_LIST}
+      FRONTEND_URL: ${FRONTEND_URL}
+
+      # Admin
+      ADMIN_USER: ${ADMIN_USER:-root}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-root}
+      SECRET_KEY: ${SECRET_KEY}
 
     volumes:
       - ./uploads:/app/uploads
