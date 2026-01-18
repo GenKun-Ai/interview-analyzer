@@ -35,6 +35,7 @@ services:
 
       # CORS
       CORS_ORIGIN_LIST: ${CORS_ORIGIN_LIST}
+      FRONTEND_URL: ${FRONTEND_URL}
 
       # Admin
       ADMIN_USER: ${ADMIN_USER:-root}
