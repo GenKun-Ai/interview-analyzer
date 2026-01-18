@@ -46,16 +46,20 @@ export class UsersController {
   async googleLoginCallback(@Req() req: GoogleRequest, @Res() res: Response) {
     const { token } = await this.usersService.googleLogin(req);
 
+    // 환경에 따른 보안 설정
+    const isProduction = process.env.NODE_ENV === 'production';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
     // 쿠키에 JWT 토큰 저장
     res.cookie('accessToken', token, {
       httpOnly: true,  // XSS 방지 (JavaScript로 접근 불가)
-      secure: false,   // 개발 환경: false, 프로덕션: true (HTTPS 필수)
+      secure: isProduction,   // 프로덕션: HTTPS 필수
       maxAge: 24 * 60 * 60 * 1000, // 1일
       sameSite: 'lax', // CSRF 방지
     });
 
     // 프론트엔드로 리다이렉트 (토큰은 쿠키에 있으므로 URL에 포함 안 함)
-    return res.redirect('http://localhost:5173/');
+    return res.redirect(frontendUrl);
   }
 
   /**

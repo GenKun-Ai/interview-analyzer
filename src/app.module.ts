@@ -53,6 +53,7 @@ const typeOrmAsyncOptions = {
         DB_NAME: Joi.string().required(),
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().required(),
+        FRONTEND_URL: Joi.string().default('http://localhost:5173'),
       }),
     }),
     BullModule.forRootAsync({
