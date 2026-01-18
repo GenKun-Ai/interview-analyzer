@@ -51,6 +51,36 @@ services:
     networks:
       - genkun-network
 
+  # 2. Worker (BullMQ Processor 전용)
+  worker:
+    image: sgwar/genkun-backend:latest
+    container_name: genkun-worker
+    restart: unless-stopped
+    command: ["node", "dist/worker.js"]   # 핵심
+    environment:
+      NODE_ENV: production
+
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+    volumes:
+      - ./uploads:/app/uploads
+
+    depends_on:
+      - redis
+      - postgres
+
+    networks:
+      - genkun-network
+
   # PostgreSQL
   postgres:
     image: postgres:15-alpine
