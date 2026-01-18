@@ -81,13 +81,13 @@ jobs:
             curl -o docker-compose.prod.yml https://raw.githubusercontent.com/${{ github.repository }}/dev/docker-compose.prod.yml
 
             # Docker Hub에서 최신 이미지 pull
-            docker-compose -f docker-compose.prod.yml pull backend < /dev/null
+            docker compose -f docker-compose.prod.yml pull backend
 
             # 백엔드 컨테이너만 재시작 (DB는 유지)
-            docker-compose -f docker-compose.prod.yml up -d --no-deps backend < /dev/null
+            docker compose -f docker-compose.prod.yml up -d --no-deps backend
 
             # 사용하지 않는 이미지 삭제
-            docker image prune -f < /dev/null
+            docker image prune -f
 
             echo "✅ Backend deployment completed!"
       
