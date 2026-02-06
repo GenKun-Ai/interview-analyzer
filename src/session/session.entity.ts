@@ -16,7 +16,7 @@ export type SessionStatus =
 @Entity({ name: 'SESSION' })
 export class SessionEntity extends CommonEntity {
   // User 관계 추가 (N -> 1)
-  @ManyToOne(() => UserEntity, (user) => user.session, {
+  @ManyToOne(() => UserEntity, (user) => user.sessions, {
     nullable: false, // 세션은 반드시 유저 존재
     onDelete: 'CASCADE', // 유저 삭제시 세션도 삭제
   })

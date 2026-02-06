@@ -40,26 +40,30 @@ export class SessionService {
     return this.sessionRepository.save(session);
   }
 
-  /** 모든 세션 목록 조회 (최신순 정렬) */
-  async findAll(): Promise<SessionEntity[]> {
+  /** 특정 유저의 세션 목록 조회 (최신순 정렬) */
+  async findAll(userId: string): Promise<SessionEntity[]> {
     return this.sessionRepository.find({
-      order: { createAt: 'DESC' }, // 최신 생성 순으로 정렬
-      relations: ['transcript', 'analysis'], // 연관 데이터 포함
-    })
-  }
-
-  /** 세션 ID로 상세 정보 조회 (Transcript, Analysis 포함) */
-  async findOne(sessionId: string): Promise<SessionEntity | null> {
-    // ID로 세션 찾고, 연관된 transcript와 analysis도 함께 로드함
-    return this.sessionRepository.findOne({
-      where: { id: sessionId },
+      where: { userId },
+      order: { createAt: 'DESC' },
       relations: ['transcript', 'analysis'],
     })
   }
 
-  /** 세션 삭제 (DB + 오디오 파일) */
-  async remove(sessionId: string): Promise<void> {
-    const session = await this.findOne(sessionId)
+  /** 세션 ID로 상세 정보 조회 (소유권 확인 포함) */
+  async findOne(sessionId: string, userId?: string): Promise<SessionEntity | null> {
+    const where: any = { id: sessionId };
+    if (userId) {
+      where.userId = userId;
+    }
+    return this.sessionRepository.findOne({
+      where,
+      relations: ['transcript', 'analysis'],
+    })
+  }
+
+  /** 세션 삭제 (소유권 확인 + DB + 오디오 파일) */
+  async remove(sessionId: string, userId: string): Promise<void> {
+    const session = await this.findOne(sessionId, userId)
 
     if (!session) {
       throw new Error(`세션을 찾을 수 없습니다: ${sessionId}`)

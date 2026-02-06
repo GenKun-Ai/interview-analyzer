@@ -19,7 +19,7 @@ import { JwtStrategy } from '../common/jwt.strategy';
   imports: [
     TypeOrmModule.forFeature([UserEntity]), // UserEntity 사용 설정
     PassportModule.register({ defaultStrategy: 'jwt' }), // Passport 기본 전략: jwt
-    JwtModule.registerAsync({
+    JwtModule.registerAsync({ // 다른 프로바이더를 필요, 모듈 초기화 생성, 중첩 사용 그리고 팩토리함수 단일책임으로 초기화
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

@@ -37,6 +37,6 @@ export class UserEntity extends CommonEntity {
   role: UserRole
 
   // 역관계 (1 -> N)
-  @OneToMany(() => SessionEntity, (session) => session.userId)
-  session: SessionEntity[] // 분석과 연결된 세션
+  @OneToMany(() => SessionEntity, (session) => session.user)
+  sessions: SessionEntity[]
 }

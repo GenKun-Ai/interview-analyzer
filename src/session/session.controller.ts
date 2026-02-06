@@ -54,26 +54,30 @@ export class SessionController {
   }
 
   @Get()
-  @ApiOperation({ summary: '세션 목록 조회', description: '모든 세션 목록을 최신순으로 조회합니다' })
+  @ApiOperation({ summary: '내 세션 목록 조회', description: '현재 로그인한 유저의 세션 목록을 최신순으로 조회합니다' })
   @ApiResponse({ status: 200, description: '조회 성공', type: [SessionEntity] })
-  async findAll() {
-    return this.sessionService.findAll();
+  async findAll(@GetUser() user: UserEntity) {
+    return this.sessionService.findAll(user.id);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: '세션 조회', description: 'ID로 세션 상세 정보를 조회합니다' })
+  @ApiOperation({ summary: '세션 조회', description: 'ID로 내 세션 상세 정보를 조회합니다' })
   @ApiResponse({ status: 200, description: '조회 성공', type: SessionEntity })
   @ApiResponse({ status: 404, description: '세션을 찾을 수 없음' })
-  findOne(@Param('id') id: string) {
-    return this.sessionService.findOne(id);
+  async findOne(@GetUser() user: UserEntity, @Param('id') id: string) {
+    const session = await this.sessionService.findOne(id, user.id);
+    if (!session) {
+      throw new NotFoundException(`세션을 찾을 수 없습니다: ${id}`);
+    }
+    return session;
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: '세션 삭제', description: '세션 및 관련 데이터(오디오 파일, 분석 결과)를 삭제합니다' })
+  @ApiOperation({ summary: '세션 삭제', description: '내 세션 및 관련 데이터(오디오 파일, 분석 결과)를 삭제합니다' })
   @ApiResponse({ status: 200, description: '삭제 성공' })
   @ApiResponse({ status: 404, description: '세션을 찾을 수 없음' })
-  async remove(@Param('id') id: string) {
-    await this.sessionService.remove(id);
+  async remove(@GetUser() user: UserEntity, @Param('id') id: string) {
+    await this.sessionService.remove(id, user.id);
     return { message: '세션이 삭제되었습니다', sessionId: id };
   }
 
@@ -83,8 +87,8 @@ export class SessionController {
   @ApiResponse({ status: 206, description: 'Partial Content - Range 요청 처리 성공' })
   @ApiResponse({ status: 404, description: '파일을 찾을 수 없음' })
   @ApiResponse({ status: 416, description: 'Range 요청 범위가 유효하지 않음' })
-  async streamAudio(@Param('id') id: string, @Req() req: Request, @Res() res: Response) {
-    const session = await this.sessionService.findOne(id);
+  async streamAudio(@GetUser() user: UserEntity, @Param('id') id: string, @Req() req: Request, @Res() res: Response) {
+    const session = await this.sessionService.findOne(id, user.id);
 
     if (!session || !session.originalAudioPath) {
       return res.status(404).json({ message: '오디오 파일을 찾을 수 없습니다' });
@@ -194,13 +198,14 @@ export class SessionController {
   @ApiResponse({ status: 400, description: '이미 처리 중이거나 완료된 세션' })
   @ApiResponse({ status: 404, description: '세션을 찾을 수 없음' })
   async uploadAudio(
+    @GetUser() user: UserEntity,
     @Param('id') sessionId: string,
     @UploadedFile() audioFile: Express.Multer.File,
   ) {
     this.logger.log(`파일 업로드 요청: ${sessionId}`);
 
-    // 1. 세션 존재 및 상태 확인
-    const session = await this.sessionService.findOne(sessionId);
+    // 1. 세션 존재 및 소유권 확인
+    const session = await this.sessionService.findOne(sessionId, user.id);
 
     if (!session) {
       // 업로드된 파일 삭제 (정리)
@@ -270,9 +275,9 @@ export class SessionController {
       }
     }
   })
-  async getJobStatus(@Param('id') sessionId: string) {
-    // 세션 정보 조회
-    const session = await this.sessionService.findOne(sessionId);
+  async getJobStatus(@GetUser() user: UserEntity, @Param('id') sessionId: string) {
+    // 세션 정보 조회 (소유권 확인)
+    const session = await this.sessionService.findOne(sessionId, user.id);
 
     if (!session) {
       return {
