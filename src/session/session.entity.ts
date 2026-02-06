@@ -2,7 +2,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { AnalysisEntity } from 'src/analysis/entities/analysis.entity';
 import { CommonEntity } from 'src/common/entities/common.entity'
 import { TranscriptEntity } from 'src/stt/entities/transcript.entity';
-import { Column, Entity, OneToOne } from 'typeorm'
+import { UserEntity } from 'src/users/entities/user.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, RelationId } from 'typeorm'
 
 // 세션 상태 타입 (enum으로 변경 가능)
 export type SessionStatus =
@@ -14,14 +15,32 @@ export type SessionStatus =
   | 'FAILED';
 @Entity({ name: 'SESSION' })
 export class SessionEntity extends CommonEntity {
+  // User 관계 추가 (N -> 1)
+  @ManyToOne(() => UserEntity, (user) => user.sessions, {
+    nullable: false, // 세션은 반드시 유저 존재
+    onDelete: 'CASCADE', // 유저 삭제시 세션도 삭제
+  })
+  @JoinColumn({ name: 'user_id' })
+  user: UserEntity
+
+  @RelationId((session: SessionEntity) => session.user)
+  userId: string
+
   @ApiProperty({ description: '세션 언어', example: 'ja' })
   @Column({ type: 'varchar', length: 10 })
   language: string
 
   @ApiProperty({
     description: '세션 처리 상태',
-    enum: ['CREATED', 'UPLOADING', 'TRANSCRIBING', 'ANALYZING', 'COMPLETED', 'FAILED'],
-    example: 'CREATED'
+    enum: [
+      'CREATED',
+      'UPLOADING',
+      'TRANSCRIBING',
+      'ANALYZING',
+      'COMPLETED',
+      'FAILED',
+    ],
+    example: 'CREATED',
   })
   @Column({
     type: 'enum',
@@ -35,33 +54,62 @@ export class SessionEntity extends CommonEntity {
     ],
     default: 'CREATED',
   })
-  status: SessionStatus;
+  status: SessionStatus
 
   @ApiProperty({ description: '세션 설명', required: false, nullable: true })
   @Column({ type: 'text', nullable: true })
-  description?: string;
+  description?: string
 
-  @ApiProperty({ description: '원본 오디오 파일 경로', required: false, nullable: true, example: 'memory://interview.mp3' })
+  @ApiProperty({
+    description: '원본 오디오 파일 경로',
+    required: false,
+    nullable: true,
+    example: 'memory://interview.mp3',
+  })
   @Column({ type: 'varchar', nullable: true })
-  originalAudioPath?: string;
+  originalAudioPath?: string
 
-  @ApiProperty({ description: '오디오 길이 (초)', required: false, nullable: true, example: 125 })
-  @Column({ type: 'integer', nullable: true})
-  audioDuration?: number;
+  @ApiProperty({
+    description: '오디오 길이 (초)',
+    required: false,
+    nullable: true,
+    example: 125,
+  })
+  @Column({ type: 'integer', nullable: true })
+  audioDuration?: number
 
-  @ApiProperty({ description: '분석 완료 후 파일 자동 삭제 여부', default: false })
-  @Column({ type: 'boolean', default: false})
-  deleteAfterAnalysis: boolean;
+  @ApiProperty({
+    description: '분석 완료 후 파일 자동 삭제 여부',
+    default: false,
+  })
+  @Column({ type: 'boolean', default: false })
+  deleteAfterAnalysis: boolean
 
-  @ApiProperty({ description: '에러 메시지 (실패 시)', required: false, nullable: true })
+  @ApiProperty({
+    description: '에러 메시지 (실패 시)',
+    required: false,
+    nullable: true,
+  })
   @Column({ type: 'text', nullable: true })
-  errorMessage?: string;
+  errorMessage?: string
 
-  @ApiProperty({ description: 'STT 변환 결과', type: () => TranscriptEntity, required: false })
-  @OneToOne(() => TranscriptEntity, transcript => transcript.session, { cascade: true })
-  transcript?: TranscriptEntity;
+  @ApiProperty({
+    description: 'STT 변환 결과',
+    type: () => TranscriptEntity,
+    required: false,
+  })
+  @OneToOne(() => TranscriptEntity, (transcript) => transcript.session, {
+    cascade: true,
+  })
+  transcript?: TranscriptEntity
 
-  @ApiProperty({ description: '분석 결과', type: () => AnalysisEntity, required: false })
-  @OneToOne(() => AnalysisEntity, analysis => analysis.session, { cascade: true })
-  analysis?: AnalysisEntity;
+  @ApiProperty({
+    description: '분석 결과',
+    type: () => AnalysisEntity,
+    required: false,
+  })
+  @OneToOne(() => AnalysisEntity, (analysis) => analysis.session, {
+    cascade: true,
+  })
+  analysis?: AnalysisEntity
 }

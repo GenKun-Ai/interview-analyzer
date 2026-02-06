@@ -2,7 +2,7 @@
 
 import { CommonEntity } from 'src/common/entities/common.entity'
 import { SessionEntity } from 'src/session/session.entity'
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm'
+import { Column, Entity, JoinColumn, OneToOne, RelationId } from 'typeorm'
 import type { TranscriptSegment, Speaker } from 'src/common/interfaces/stt-engine.interface'
 
 @Entity('transcripts')
@@ -13,7 +13,7 @@ export class TranscriptEntity extends CommonEntity {
   @JoinColumn()
   session: SessionEntity; // 변환과 연결된 세션
 
-  @Column({ type: 'varchar' })
+  @RelationId((transcript: TranscriptEntity) => transcript.session)
   sessionId: string; // 세션 ID
 
   @Column({ type: 'jsonb' })

@@ -4,7 +4,7 @@ import type {
   SpeechHabits,
 } from 'src/common/interfaces/analysis-engine.interface'
 import { SessionEntity } from "src/session/session.entity"
-import { Column, Entity, JoinColumn, OneToOne } from "typeorm"
+import { Column, Entity, JoinColumn, OneToOne, RelationId } from "typeorm"
 
 // analysis/entities/analysis.entity.ts
 @Entity('analyses')
@@ -15,7 +15,7 @@ export class AnalysisEntity extends CommonEntity {
   @JoinColumn()
   session: SessionEntity; // 분석과 연결된 세션
 
-  @Column({ type: 'varchar' })
+  @RelationId((analysis: AnalysisEntity) => analysis.session)
   sessionId: string; // 세션 ID
 
   @Column({ type: 'jsonb' })

@@ -1,4 +1,6 @@
 // stt-engine.interface.ts
+
+// STT 결과 타입
 export interface SttResult {
     fullText: string;  // 전체 텍스트를 포함함
     segments: TranscriptSegment[]; // 텍스트 세그먼트 목록
@@ -35,6 +37,7 @@ export interface SttEngine {
     getName(): string; // 엔진 이름 반환함
 }
 
+// STT(음성 -> 텍스트) 엔진 계약
 export interface SttOptions {
     language?: string; // 변환할 오디오 언어 (선택 사항)
     filename?: string;

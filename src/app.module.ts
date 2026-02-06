@@ -9,6 +9,7 @@ import { SttModule } from './stt/stt.module';
 import { SessionModule } from './session/session.module';
 import { AnalysisModule } from './analysis/analysis.module';
 import { BullModule } from '@nestjs/bullmq';
+import { UsersModule } from './users/users.module';
 
 const typeOrmAsyncOptions = {
   useFactory: async (
@@ -33,6 +34,10 @@ const typeOrmAsyncOptions = {
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [
+        `.env.${process.env.NODE_ENV || 'development'}`,
+        '.env',
+      ],
       validationSchema: Joi.object({
         NODE_ENV: Joi.string()
           .valid('development', 'production', 'test', 'provision')
@@ -48,6 +53,7 @@ const typeOrmAsyncOptions = {
         DB_NAME: Joi.string().required(),
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().required(),
+        FRONTEND_URL: Joi.string().default('http://localhost:5173'),
       }),
     }),
     BullModule.forRootAsync({
@@ -64,6 +70,7 @@ const typeOrmAsyncOptions = {
     SttModule,
     SessionModule,
     AnalysisModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
