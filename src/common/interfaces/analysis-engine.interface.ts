@@ -3,10 +3,11 @@
 import { TranscriptSegment, SttResult } from './stt-engine.interface'
 
 
+// 분석 결과 타입
 export interface AnalysisResult {
-  structuralAnalysis: StructuralAnalysis // 구조적 분석 결과
+  structuralAnalysis: StructuralAnalysis // 구조적 분석 결과 (질문-응답 분석)
   speechHabits: SpeechHabits // 말하기 습관 분석 결과
-  overallScore: number // 전체 점수
+  overallScore: number // 전체 점수 (0~100)
   recommendations: string[] // 개선을 위한 추천 사항 목록
 }
 
@@ -54,6 +55,7 @@ export interface SpeechHabits {
   averagePauseDuration: number        // 평균 멈춤 시간
 }
 
+// 분석 엔진 계약
 export interface AnalysisEngine {
   analyze(sttResult: SttResult): Promise<AnalysisResult> // STT 결과를 분석하여 분석 결과를 반환함
   getName(): string // 엔진 이름 반환함
