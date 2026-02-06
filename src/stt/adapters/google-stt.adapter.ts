@@ -14,7 +14,7 @@ export class GoogleSttAdapter implements SttEngine {
     }
 
     transcribe(audioBuffer: Buffer, options?: SttOptions): Promise<SttResult> {
-        // 아직 구현되지 않음, 에러를 발생시킴
+        // TODO 추후 구현 예정
         throw new Error('Google STT not implemented yet');
     }
 }

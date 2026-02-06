@@ -16,11 +16,11 @@ import { TranscriptEntity } from './entities/transcript.entity';
   controllers: [SttController], // 컨트롤러 등록
   providers: [
     SttService,
-    OpenAIWhisperAdapter,
-    GoogleSttAdapter,
+    OpenAIWhisperAdapter, // 어댑터 1
+    GoogleSttAdapter,     // 어댑터 2
     {
       provide: STT_ENGINE, // STT_ENGINE 토큰 제공
-      // 팩토리 함수를 사용하여 동적으로 STT 엔진 선택
+      // 팩토리 함수를 사용하여 동적(환경변수)으로 STT 엔진 선택
       useFactory: (config: ConfigService, openai: OpenAIWhisperAdapter, google: GoogleSttAdapter) => {
         const engine = config.get('STT_ENGINE', 'openai'); // 환경변수에서 엔진 이름 가져옴
         return engine === 'google' ? google : openai; // 'google'이면 Google, 아니면 OpenAI 어댑터 사용
