@@ -43,7 +43,7 @@ export class SessionService {
   /** 특정 유저의 세션 목록 조회 (최신순 정렬) */
   async findAll(userId: string): Promise<SessionEntity[]> {
     return this.sessionRepository.find({
-      where: { userId },
+      where: { user: { id: userId } },
       order: { createAt: 'DESC' },
       relations: ['transcript', 'analysis'],
     })
@@ -53,7 +53,7 @@ export class SessionService {
   async findOne(sessionId: string, userId?: string): Promise<SessionEntity | null> {
     const where: any = { id: sessionId };
     if (userId) {
-      where.userId = userId;
+      where.user = { id: userId };
     }
     return this.sessionRepository.findOne({
       where,
@@ -195,7 +195,7 @@ export class SessionService {
   async saveTranscript(sessionId: string, sttResult: SttResult) {
 
     const transcript = this.transcriptRepository.create({
-      sessionId,
+      session: { id: sessionId } as SessionEntity, // relation 기반으로 FK 설정
       fullText: sttResult.fullText,
       language: sttResult.language,
       duration: sttResult.duration,
@@ -216,7 +216,7 @@ export class SessionService {
     analysisResult: AnalysisResult,
   ) {
     const analysis = this.analysisRepository.create({
-      sessionId,
+      session: { id: sessionId } as SessionEntity, // relation 기반으로 FK 설정
       structuralAnalysis: analysisResult.structuralAnalysis,
       speechHabits: analysisResult.speechHabits,
       overallScore: analysisResult.overallScore,
