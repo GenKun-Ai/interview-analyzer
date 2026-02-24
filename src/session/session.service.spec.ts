@@ -154,15 +154,16 @@ describe('SessionService', () => {
   describe('create', () => {
     it('새 세션을 생성해야 함', async () => {
       // Given
+      const mockUserEntity = { id: 'user-id-1', email: 'test@example.com' } as any;
       const language = 'ko';
       sessionRepository.create.mockReturnValue(mockSession as SessionEntity);
       sessionRepository.save.mockResolvedValue(mockSession as SessionEntity);
 
       // When
-      const result = await service.create(language);
+      const result = await service.create(mockUserEntity, language);
 
       // Then
-      expect(sessionRepository.create).toHaveBeenCalledWith({ language });
+      expect(sessionRepository.create).toHaveBeenCalledWith({ user: mockUserEntity, language });
       expect(sessionRepository.save).toHaveBeenCalledWith(mockSession);
       expect(result).toEqual(mockSession);
     });
@@ -365,7 +366,7 @@ describe('SessionService', () => {
         originalAudioPath: mockAudioFile.path,
       };
       sessionRepository.findOne.mockResolvedValue(sessionWithDelete as SessionEntity);
-      (fs.unlink as jest.Mock) = jest.fn().mockResolvedValue(undefined);
+      jest.spyOn(fs, 'unlink').mockResolvedValue(undefined);
 
       // When
       await service.processAudio('test-session-id', mockAudioFile);
