@@ -1,10 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { SessionEntity, SessionStatus } from './session.entity';
-import { CreateSessionDto } from './dto/create-session.dto';
 import { Repository } from 'typeorm';
-import { SttService } from 'src/stt/stt.service';
-import { AnalysisService } from 'src/analysis/analysis.service';
 import type { SttResult } from 'src/common/interfaces/stt-engine.interface';
 import type { AnalysisResult } from 'src/common/interfaces/analysis-engine.interface';
 import * as fs from 'fs/promises';
@@ -22,13 +19,11 @@ export class SessionService {
 
   constructor(
     @InjectRepository(SessionEntity)
-    private readonly sessionRepository: Repository<SessionEntity>, // 세션 DB 접근용 리포지토리
+    private readonly sessionRepository: Repository<SessionEntity>,
     @InjectRepository(TranscriptEntity)
-    private readonly transcriptRepository: Repository<TranscriptEntity>, // Transcript DB 접근용 리포지토리
+    private readonly transcriptRepository: Repository<TranscriptEntity>,
     @InjectRepository(AnalysisEntity)
-    private readonly analysisRepository: Repository<AnalysisEntity>, // Analysis DB 접근용 리포지토리
-    private readonly sttService: SttService,                       // STT 서비스 주입
-    private analysisService: AnalysisService,                     // 분석 서비스 주입
+    private readonly analysisRepository: Repository<AnalysisEntity>,
   ) {}
 
   /** 신규 세션 생성 */
@@ -77,101 +72,6 @@ export class SessionService {
     // 2. DB에서 세션 삭제 (Cascade로 Transcript, Analysis 자동 삭제)
     await this.sessionRepository.remove(session)
     this.logger.log(`세션 삭제 완료: ${sessionId}`)
-  }
-
-  /** DTO 기반 신규 세션 생성 */
-  async createSession(dto: CreateSessionDto): Promise<SessionEntity> {
-    const session = this.sessionRepository.create({
-      userId: dto.userId,
-      language: dto.language, // DTO에서 언어 가져옴
-      description: dto.description, // DTO에서 설명 가져옴
-      status: 'CREATED', // 초기 상태는 'CREATED'로 설정함
-    })
-    return await this.sessionRepository.save(session) // DB에 저장
-  }
-
-  /**
-   * 오디오 처리 파이프라인 시작
-   * 1. 세션 확인
-   * 2. 파일 메타데이터 저장
-   * 3. 상태: TRANSCRIBING
-   * 4. STT 서비스 호출 (음성 -> 텍스트)
-   * 5. 텍스트 저장 + 오디오 길이 업데이트
-   * 6. 상태: ANALYZING
-   * 7. 분석 서비스 호출 (텍스트 -> 피드백)
-   * 8. 분석 결과 저장
-   * 9. 상태: COMPLETED
-   * 10. 요청 시 오디오 파일 정리
-   * 실패 시 상태: FAILED 처리
-   * @param sessionId - 처리할 세션 ID
-   * @param audioFile - 처리할 오디오 파일 (Express.Multer.File 형식)
-   * @returns STT 결과 및 분석 결과
-   */
-  async processAudio(sessionId: string, audioFile: Express.Multer.File) {
-    // 0. Session 준비
-    const session = await this.sessionRepository.findOne({
-      where: { id: sessionId },
-    })
-
-    if (!session) {
-      throw new Error(`Session not found: ${sessionId}`) // 세션 없으면 에러 발생
-    }
-
-    // 1. 파일 메타데이터 저장
-    await this.updateSessionMetadata(sessionId, {
-      originalAudioPath: audioFile.path, // 디스크에 저장된 실제 경로
-      status: 'UPLOADING',
-    })
-    this.logger.log(`파일 저장 완료: ${audioFile.path} (크기: ${audioFile.size} bytes)`)
-
-    // 2. Update Status
-    await this.updateStatus(sessionId, 'TRANSCRIBING') // 상태를 'TRANSCRIBING'으로 변경
-
-    try {
-      // 3. STT Processing (음성 -> 텍스트)
-      // 디스크 모드: 파일에서 Buffer 읽기
-      const audioBuffer = await fs.readFile(audioFile.path)
-
-      const sttResult = await this.sttService.transcribeAudio(
-        audioBuffer, // 디스크에서 읽은 버퍼 전달
-        session.language, // 세션에 설정된 언어 사용
-        audioFile.originalname, // 기존 파일명
-      )
-      // sttResult = { fullText: "...", segments: [...], duration: X }
-
-      // 4. STT 결과 저장 + 오디오 길이 업데이트
-      await this.saveTranscript(sessionId, sttResult) // STT 결과 저장
-      await this.updateSessionMetadata(sessionId, {
-        audioDuration: Math.round(sttResult.duration), // 정수로 변환하여 저장
-      })
-      this.logger.log(`Audio duration saved: ${sttResult.duration}s`)
-
-      await this.updateStatus(sessionId, 'ANALYZING') // 상태를 'ANALYZING'으로 변경
-
-      // 5. Analysis: 분석 처리 (텍스트 -> 피드백)
-      const analysisResult = await this.analysisService.analyze(sttResult)
-      await this.saveAnalysis(sessionId, analysisResult) // 분석 결과 저장
-      // analysisResult = { score: 85, feedbakcs: [...], ...}
-
-      // 6. Complete
-      await this.updateStatus(sessionId, 'COMPLETED') // 상태를 'COMPLETED'로 변경
-
-      // 7. Cleanup if requested
-      if (session.deleteAfterAnalysis) {
-        await this.deleteAudioFile(session.originalAudioPath) // 분석 후 오디오 삭제 옵션 처리
-      }
-
-      return { sttResult, analysisResult } // 최종 결과 반환
-    } catch (error) {
-      // 에러 정보 저장
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      await this.updateSessionMetadata(sessionId, {
-        status: 'FAILED',
-        errorMessage,
-      })
-      this.logger.error(`Session ${sessionId} failed: ${errorMessage}`)
-      throw error // 에러 다시 던짐
-    }
   }
 
   // ===== Public Helper Methods (Processor에서 사용) =====

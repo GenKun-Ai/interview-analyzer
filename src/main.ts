@@ -65,20 +65,20 @@ class Application {
       origin: this.corsOriginList,
       credentials: true,
     });
-    this.server.use(cookieParser());
-    this.setUpBasicAuth();
-    this.setUpOpenAPIMidleware();
-    this.server.useGlobalPipes(
+    this.server.use(cookieParser()); // 쿠키 파싱
+    this.setUpBasicAuth(); 
+    this.setUpOpenAPIMidleware(); // swagger 접근 제한
+    this.server.useGlobalPipes( // DTO 자동 변환 + 유효성
       new ValidationPipe({
         transform: true,
       }),
     );
     // this.server.use(passport.initialize());
     // this.server.use(passport.session());
-    this.server.useGlobalInterceptors(
+    this.server.useGlobalInterceptors(  // @Exclude() 처리
       new ClassSerializerInterceptor(this.server.get(Reflector)),
     );
-    this.server.useGlobalFilters(new HttpApiExceptionFilter());
+    this.server.useGlobalFilters(new HttpApiExceptionFilter()); // 에러 응답 형식 통일
   }
 
   async boostrap() {

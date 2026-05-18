@@ -26,7 +26,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   /**
-   * GET /users/google
+   * GET /users/google 
    * Google 로그인 시작 (Google 로그인 페이지로 리다이렉트)
    */
   @Get("google")
